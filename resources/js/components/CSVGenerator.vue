@@ -146,13 +146,18 @@
                 )
             },
             orderDataByColumns(){
-                this.columns.map((column) => {
-                    this.data.sort(function(a,b){return a[column.key] < b[column.key]})
+                let data = []
+                this.data.map( (row) => {
+                    const newRow = {}
+                    this.columns.map((column) => {
+                        newRow[column.key] = row[column.key]
+                    })
+                    data.push(newRow)
                 })
+                return data
             },
             submit() {
-                this.orderDataByColumns(this.data)
-                return exportCsvFile(this.data)
+                return exportCsvFile(this.orderDataByColumns(this.data))
             }
         },
 
