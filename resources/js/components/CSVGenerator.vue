@@ -151,6 +151,7 @@
                 })
             },
             submit() {
+                this.orderDataByColumns(this.data)
                 return exportCsvFile(this.data)
             }
         },
