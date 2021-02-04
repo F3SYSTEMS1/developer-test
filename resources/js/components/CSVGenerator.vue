@@ -20,8 +20,8 @@
                             </thead>
                             <tbody>
                             <tr v-for="row in data">
-                                <td v-for="(dataColumn, columnName) in row">
-                                    <input type="text" class="form-control" v-model="row[columnName]"/>
+                                <td v-for="column in columns" >
+                                    <input type="text" class="form-control" v-model="row[column.key]"/>
                                 </td>
                             </tr>
                             </tbody>
@@ -138,14 +138,18 @@
                 }
                 this.data.forEach(
                     (row) => {
-                        if (row[oldKey] || row[oldKey] !== undefined) {
+                        if (row[oldKey] !== undefined) {
                             row[column.key] = row[oldKey];
                             delete row[oldKey];
                         }
                     }
                 )
             },
-
+            orderDataByColumns(){
+                this.columns.map((column) => {
+                    this.data.sort(function(a,b){return a[column.key] < b[column.key]})
+                })
+            },
             submit() {
                 return exportCsvFile(this.data)
             }
