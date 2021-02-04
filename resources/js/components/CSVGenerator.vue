@@ -27,8 +27,10 @@
                             </tbody>
                         </table>
 
-                        <button type="button" class="btn btn-secondary">Add Column</button>
-                        <button type="button" class="btn btn-secondary">Add Row</button>
+                        <button type="button" class="btn btn-secondary" v-on:click="add_column()">Add Column</button>
+                        <button type="button" class="btn btn-secondary" v-on:click="add_row()">Add Row</button>
+                        <button type="button" class="btn btn-secondary" v-on:click="delete_column()">Delete Column</button>
+                        <button type="button" class="btn btn-secondary" v-on:click="delete_row()">Delete Row</button>
                     </div>
 
                     <div class="card-footer text-right">
@@ -42,6 +44,8 @@
 </template>
 
 <script>
+    import {exportCsvFile} from "../api";
+
     export default {
         name: "CSVGenerator",
 
@@ -51,7 +55,7 @@
                     {
                         first_name: 'John',
                         last_name: 'Doe',
-                        emailAddress: 'john.doe@example.com'
+                        emailAddress: 'john.doe@example.com',
                     },
                     {
                         first_name: 'John',
@@ -61,9 +65,9 @@
 
                 ],
                 columns: [
-                    {key: 'first_name'},
-                    {key: 'last_name'},
-                    {key: 'emailAddress'},
+                    {key: 'first_name',},
+                    {key: 'last_name', },
+                    {key: 'emailAddress',},
 
                 ]
             }
@@ -71,32 +75,70 @@
 
         methods: {
             add_row() {
-                // Add new row to data with column keys
+                let row = {}
+                this.columns.map((column) => {
+                    row[column.key] = ''
+                })
+
+                this.data.push(row)
             },
 
             remove_row(row_index) {
-                // remove the given row
+                if(this.data.length <= 1){
+                    return false
+                }
+                this.data.splice(row_index, 1)
             },
 
-            add_column() {
+            delete_row() {
+                if(this.data.length <= 1){
+                    return false
+                }
+                this.data.splice(this.data.length - 1, 1)
+            },
+            getUniqueColumnName(columnIndex){
+                let propertyName = 'newColumn' + '-' + columnIndex
 
+                if(this.columnKeyExists(propertyName)){
+                    return this.getUniqueColumnName(++columnIndex)
+                }
+                return propertyName;
+            },
+            add_column() {
+                let columnName = this.getUniqueColumnName(this.columns.length)
+
+                this.columns.push({key: columnName})
+
+                this.data.map((row, index) => {
+                    row[columnName] = ''
+                })
+            },
+            delete_column(){
+                if(this.columns.length <= 1){
+                    return false
+                }
+                const columnToDelete = this.columns[this.columns.length - 1]
+                this.data.map((row, index) => {
+                    delete row[columnToDelete.key]
+                })
+                this.columns.splice(this.columns.length - 1, 1)
+            },
+
+            columnKeyExists(columnKey) {
+                return !!this.columns.find(column => column.key === columnKey);
             },
 
             updateColumnKey(column, event) {
                 let oldKey = column.key;
-
-                let columnKeyExists = !!this.columns.find(column => column.key === event.target.value);
-
+                let columnKeyExists = this.columnKeyExists(event.target.value)
                 column.key = event.target.value;
-
                 if (columnKeyExists) {
                     column.key = event.target.value.substring(0, event.target.value.length - 1);
                     return;
                 }
-
                 this.data.forEach(
                     (row) => {
-                        if (row[oldKey]) {
+                        if (row[oldKey] || row[oldKey] !== undefined) {
                             row[column.key] = row[oldKey];
                             delete row[oldKey];
                         }
@@ -105,7 +147,7 @@
             },
 
             submit() {
-                return axios.patch('/api/csv-export', this.data);
+                return exportCsvFile(this.data)
             }
         },
 
