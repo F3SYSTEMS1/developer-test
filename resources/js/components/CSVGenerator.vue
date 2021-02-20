@@ -16,19 +16,25 @@
                                            @input="updateColumnKey(column, $event)"
                                     />
                                 </th>
+                                <th>
+
+                                </th>
                             </tr>
                             </thead>
                             <tbody>
-                            <tr v-for="row in data">
+                            <tr v-for="(row, index) in data">
                                 <td v-for="(dataColumn, columnName) in row">
                                     <input type="text" class="form-control" v-model="row[columnName]"/>
+                                </td>
+                                <td>
+                                    <button type="button" class="btn btn-secondary" @click="remove_row(index)">Remove Row</button>
                                 </td>
                             </tr>
                             </tbody>
                         </table>
 
-                        <button type="button" class="btn btn-secondary">Add Column</button>
-                        <button type="button" class="btn btn-secondary">Add Row</button>
+                        <button type="button" class="btn btn-secondary" @click="add_column()">Add Column</button>
+                        <button type="button" class="btn btn-secondary" @click="add_row()">Add Row</button>
                     </div>
 
                     <div class="card-footer text-right">
@@ -71,15 +77,32 @@
 
         methods: {
             add_row() {
-                // Add new row to data with column keys
+                let new_row_arr = {};
+
+                this.columns.forEach(function(item) {
+                    new_row_arr[item.key] = ''
+                });
+
+                this.data.push(new_row_arr);
             },
 
             remove_row(row_index) {
                 // remove the given row
+                this.data.splice(row_index, 1);
             },
 
             add_column() {
+                let new_column_index = Object.keys(this.columns).length - 2;
 
+                this.columns.push({
+                    key : 'new_column_' + new_column_index
+                });
+
+                this.data.forEach(function(item) {
+                    item["new_column_" + new_column_index] = "";
+                });
+
+                //this.updateColumnKey(this.columns[this.columns.length - 1], "new_column_" + new_column_index)
             },
 
             updateColumnKey(column, event) {
@@ -96,16 +119,26 @@
 
                 this.data.forEach(
                     (row) => {
-                        if (row[oldKey]) {
-                            row[column.key] = row[oldKey];
-                            delete row[oldKey];
-                        }
+                        /*
+                        "IF" statemnt was removed becouse with add and edit name of
+                        new column without add data to rows - not saved edited column name (based on "data" fileds keys)
+                        */
+                        row[column.key] = row[oldKey];
+                        delete row[oldKey];
                     }
                 )
             },
 
             submit() {
-                return axios.patch('/api/csv-export', this.data);
+                axios.patch('/api/csv-export', this.data)
+                    .then(response => {
+                        var fileURL = window.URL.createObjectURL(new Blob([response.data]));
+                        var fileLink = document.createElement('a');
+                        fileLink.href = fileURL;
+                        fileLink.setAttribute('download', JSON.parse(response.headers['content-disposition'])[0]['filename']);
+                        document.body.appendChild(fileLink);
+                        fileLink.click();
+                    })
             }
         },
 
