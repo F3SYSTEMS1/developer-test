@@ -12,6 +12,7 @@ class CsvExport extends Controller {
     public function convert(Request $request)
     {
         $list = json_decode($request->getContent(), true);
+        if(empty($list)) return response()->json([], 400);
 
         // add columns names
         array_unshift($list, array_keys($list[0]));
