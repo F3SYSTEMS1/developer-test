@@ -29,14 +29,19 @@ Vue.use(IconsPlugin);
 const files = require.context('./', true, /\.vue$/i)
 files.keys().map(key => Vue.component(key.split('/').pop().split('.')[0], files(key).default))
 
+/**
+ * Declaration of Vue components was transferred to that place,
+ * because old position (in "home" blade file) was cause of
+ * "Syntax error import declarations may only appear at top level of a module" error in browser console.
+ */
+
+Vue.component('c-s-v-generator', require('./components/CSVGenerator.vue').default);
 
 /**
  * Next, we will create a fresh Vue application instance and attach it to
  * the page. Then, you may begin adding components to this application
  * or customize the JavaScript scaffolding to fit your unique needs.
  */
-
-Vue.component('c-s-v-generator', require('./components/CSVGenerator.vue').default);
 
 const app = new Vue({
     el: '#app',

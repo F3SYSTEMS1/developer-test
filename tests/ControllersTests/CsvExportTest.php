@@ -6,8 +6,14 @@ use Tests\TestCase;
 
 class CsvExportTest extends TestCase
 {
-    /** @test */
-    public function controller_can_create_CSV_file()
+    /**
+     * Check possibility of CsvExport controller parse info from frontend
+     * and create CSV file with proper response.
+     *
+     * @test
+     * @return void
+     */
+    public function controllerCanCreateCsvFile()
     {
         $task_arr = [
             [
@@ -27,8 +33,14 @@ class CsvExportTest extends TestCase
         $response->assertHeader('Content-Disposition', '[{"filename" : "export.csv"}]');
     }
 
-    /** @test */
-    public function controller_can_not_create_CSV_file()
+    /**
+     * Check possibility of CsvExport controller generate proper response
+     * if request data is empty or unparsable.
+     *
+     * @test
+     * @return void
+     */
+    public function controllerCanNotCreateCsvFile()
     {
         $task_arr = [
             //

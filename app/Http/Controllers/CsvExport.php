@@ -7,15 +7,23 @@ use Illuminate\Http\Request;
 
 class CsvExport extends Controller {
     /**
-     * Converts the user input into a CSV file and streams the file back to the user
+     * Converts the user input into a CSV file and streams the file back to the user.
+     *
+     * @param Request $request
+     * @return mixed
+     * @throws \Exception If request data is empty or unparsable
      */
     public function convert(Request $request)
     {
-        $list = json_decode($request->getContent(), true);
-        if(empty($list)) return response()->json([], 400);
+        try {
+            $list = json_decode($request->getContent(), true);
 
-        // add columns names
-        array_unshift($list, array_keys($list[0]));
+            // Add columns names
+            array_unshift($list, array_keys($list[0]));
+
+        } catch (\Exception $e) {
+            return response()->json([], 400);
+        }
 
         $headers = [
             'Content-Disposition' => '[{"filename" : "export.csv"}]',
@@ -24,14 +32,20 @@ class CsvExport extends Controller {
         return response()->stream($this->exportCSVFile($list), 200, $headers);
     }
 
-    protected function exportCSVFile($list = null) {
+    /**
+     * Create CSV file, based on data from request.
+     *
+     * @param array $list
+     * @return mixed
+     */
+    protected function exportCSVFile($list) {
         return function() use ($list)
         {
-            $FH = fopen('php://output', 'w');
+            $file_stream = fopen('php://output', 'w');
             foreach ($list as $row) {
-                fputcsv($FH, $row);
+                fputcsv($file_stream, $row);
             }
-            fclose($FH);
+            fclose($file_stream);
         };
     }
 }

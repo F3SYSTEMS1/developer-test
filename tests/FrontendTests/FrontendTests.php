@@ -4,10 +4,15 @@ namespace Tests\ControllersTests;
 
 use Tests\TestCase;
 
-class CsvExportTest extends TestCase
+class FrontendTests extends TestCase
 {
-    /** @test */
-    public function page_exists()
+    /**
+     * Check of accessibility and present some essential structure blocks of "Home" page.
+     *
+     * @test
+     * @return void
+     */
+    public function pageExistCheck()
     {
         $page = $this->get('/')->assertStatus( 200);
         $page

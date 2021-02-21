@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
@@ -41,6 +40,7 @@
                     </div>
                 </div>
             </div>
+
             <c-s-v-generator></c-s-v-generator>
         </div>
 
