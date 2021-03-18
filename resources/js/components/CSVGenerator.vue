@@ -16,19 +16,25 @@
                                            @input="updateColumnKey(column, $event)"
                                     />
                                 </th>
+                                <th>
+                                    &nbsp;
+                                </th>
                             </tr>
                             </thead>
                             <tbody>
-                            <tr v-for="row in data">
+                            <tr v-for="(row, index) in data">
                                 <td v-for="(dataColumn, columnName) in row">
                                     <input type="text" class="form-control" v-model="row[columnName]"/>
+                                </td>
+                                <td>
+                                    <button type="button" class="btn btn-danger" @click="removeRow(index)">&times;</button>
                                 </td>
                             </tr>
                             </tbody>
                         </table>
 
-                        <button type="button" class="btn btn-secondary">Add Column</button>
-                        <button type="button" class="btn btn-secondary">Add Row</button>
+                        <button type="button" class="btn btn-secondary" @click="addColumn()">Add Column</button>
+                        <button type="button" class="btn btn-secondary" @click="addRow()">Add Row</button>
                     </div>
 
                     <div class="card-footer text-right">
@@ -70,15 +76,26 @@
         },
 
         methods: {
-            add_row() {
-                // Add new row to data with column keys
+            addRow() {
+                const row = {};
+                this.columns.forEach(column => {
+                    row[column.key] = '';
+                })
+                this.data.push(row);
             },
 
-            remove_row(row_index) {
-                // remove the given row
+            removeRow(index) {
+                if (confirm('Are you sure?')) {
+                    this.data.splice(index, 1);
+                }
             },
 
-            add_column() {
+            addColumn() {
+                const key = 'column ' + (Object.keys(this.columns).length + 1);
+                this.columns.push({key})
+                this.data.forEach(item => {
+                    item[key] = '';
+                });
 
             },
 
@@ -93,19 +110,40 @@
                     column.key = event.target.value.substring(0, event.target.value.length - 1);
                     return;
                 }
-
+                let newData = [];
                 this.data.forEach(
                     (row) => {
-                        if (row[oldKey]) {
-                            row[column.key] = row[oldKey];
-                            delete row[oldKey];
-                        }
+                        //There was a bug here: https://youtu.be/rKtXNaDlhmE
+                        //
+                        //This approach increases the сomputational complexity (since we have nested loops),
+                        // but it shouldn't be an issue for performance (assumed, number of columns is not a big number
+                        // (simply, place on the screen will end faster than it will bring any performance issues);
+                        // it was tested on a grid of 20x20 and didn't have any impact on the performance;
+                        // but still, there's a place to improve)
+                        let newRow = {};
+                        this.columns.forEach(col => {
+                            newRow[col.key] = (col.key === column.key) ? row[oldKey] : row[col.key];
+                        });
+                        newData.push(newRow);
                     }
                 )
+                this.data = newData;
             },
 
             submit() {
-                return axios.patch('/api/csv-export', this.data);
+                return axios
+                    .patch('/api/csv-export', this.data)
+                    .then(response => {
+                        const link = document.createElement('a');
+                        link.setAttribute('href', window.URL.createObjectURL(new Blob([response.data])));
+                        link.setAttribute('download', 'file.csv');
+                        document.body.appendChild(link);
+                        link.click();
+                    })
+                    .catch(err => {
+                        alert('Something went wrong');
+                        console.error(err);
+                    })
             }
         },
 
