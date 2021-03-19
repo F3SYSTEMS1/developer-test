@@ -6,7 +6,9 @@
 
 require('./bootstrap');
 
+
 import { BootstrapVue, IconsPlugin } from 'bootstrap-vue'
+import VueSimpleAlert from 'vue-simple-alert'
 import 'bootstrap/dist/css/bootstrap.css'
 import 'bootstrap-vue/dist/bootstrap-vue.css'
 
@@ -16,6 +18,8 @@ window.Vue = require('vue');
 Vue.use(BootstrapVue);
 // Optionally install the BootstrapVue icon components plugin
 Vue.use(IconsPlugin);
+// Optionally install the VueSimpleAlert plugin
+Vue.use(VueSimpleAlert);
 
 
 /**

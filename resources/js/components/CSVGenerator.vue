@@ -6,29 +6,15 @@
                     <div class="card-header">Table to CSV Generator</div>
 
                     <div class="card-body">
-                        <table class="table table-bordered">
-                            <thead>
-                            <tr>
-                                <th v-for="column in columns">
-                                    <input type="text"
-                                           class="form-control"
-                                           :value="column.key"
-                                           @input="updateColumnKey(column, $event)"
-                                    />
-                                </th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            <tr v-for="row in data">
-                                <td v-for="(dataColumn, columnName) in row">
-                                    <input type="text" class="form-control" v-model="row[columnName]"/>
-                                </td>
-                            </tr>
-                            </tbody>
-                        </table>
+                        <CSVTable
+                            :columns="columns"
+                            :data="data"
+                            @remove-row="removeRow"
+                            @update-column-key="updateColumnKey"
+                        ></CSVTable>
 
-                        <button type="button" class="btn btn-secondary">Add Column</button>
-                        <button type="button" class="btn btn-secondary">Add Row</button>
+                        <button type="button" class="btn btn-secondary" @click="addColumn">Add Column</button>
+                        <button type="button" class="btn btn-secondary" @click="addRow">Add Row</button>
                     </div>
 
                     <div class="card-footer text-right">
@@ -42,8 +28,14 @@
 </template>
 
 <script>
+    import { BIconTrash } from 'bootstrap-vue';
+    import CSVTable from './CSVTable';
     export default {
-        name: "CSVGenerator",
+        components: {
+            BIconTrash, CSVTable
+        },
+
+        name: 'CSVGenerator',
 
         data() {
             return {
@@ -61,38 +53,67 @@
 
                 ],
                 columns: [
-                    {key: 'first_name'},
-                    {key: 'last_name'},
-                    {key: 'emailAddress'},
-
+                    {key: 'first_name', has_error: false},
+                    {key: 'last_name', has_error: false},
+                    {key: 'emailAddress', has_error: false},
                 ]
             }
         },
 
         methods: {
-            add_row() {
+            addRow() {
+                let newItem = {
+                    first_name: 'John',
+                    last_name: 'Doe',
+                    emailAddress: 'john.doe@example.com'
+                };
+
+                for (let column of this.columns) {
+                    if (!newItem[column.key]) {
+                        newItem[column.key] = null;
+                    }
+                }
+
+                this.data.push(newItem);
                 // Add new row to data with column keys
             },
 
-            remove_row(row_index) {
+            removeRow(rowIndex) {
+                this.data.splice(rowIndex, 1);
                 // remove the given row
             },
 
-            add_column() {
-
+            addColumn() {
+                const columnKey = 'column_' + this.columns.length;
+                this.columns.push({
+                    key: columnKey
+                });
             },
 
             updateColumnKey(column, event) {
-                let oldKey = column.key;
+                const oldKey = column.key;
+                const wasChanged = column.key !== event.target.value;
 
-                let columnKeyExists = !!this.columns.find(column => column.key === event.target.value);
-
-                column.key = event.target.value;
-
-                if (columnKeyExists) {
-                    column.key = event.target.value.substring(0, event.target.value.length - 1);
+                if (!wasChanged) {
+                    column.has_error = false;
                     return;
                 }
+
+                const columnKeyExists = !!this.columns.find(column => column.key === event.target.value);
+
+                if (columnKeyExists) {
+                    this.$fire({
+                        title: 'Error',
+                        text: 'Column name already in use!',
+                        type: 'warning',
+                        timer: 2000
+                    });
+                    column.has_error = true;
+                    return;
+                }
+
+                column.key = event.target.value;
+                column.has_error = false;
 
                 this.data.forEach(
                     (row) => {
@@ -110,6 +131,15 @@
         },
 
         watch: {
+            columns: function (columns) {
+                const lastAddedColumnKey = columns[columns.length - 1].key;
+
+                this.data = this.data.map(item => {
+                    item[lastAddedColumnKey] = null;
+
+                    return item;
+                });
+            }
         }
     }
 </script>
