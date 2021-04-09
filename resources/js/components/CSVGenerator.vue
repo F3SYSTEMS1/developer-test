@@ -16,19 +16,37 @@
                                            @input="updateColumnKey(column, $event)"
                                     />
                                 </th>
+                                <th></th>
                             </tr>
                             </thead>
                             <tbody>
                             <tr v-for="row in data">
-                                <td v-for="(dataColumn, columnName) in row">
-                                    <input type="text" class="form-control" v-model="row[columnName]"/>
+                                <td v-for="column in columns">
+                                    <input type="text" class="form-control" v-model="row[column.key]"/>
+                                </td>
+                                <td>
+                                    <button type="button" class="btn btn-danger btn-sm" title="Delete" @click="removeRow(row)">x</button>
                                 </td>
                             </tr>
                             </tbody>
                         </table>
 
-                        <button type="button" class="btn btn-secondary">Add Column</button>
-                        <button type="button" class="btn btn-secondary">Add Row</button>
+                        <button
+                            type="button"
+                            title="Maximum 10 columns"
+                            class="btn btn-secondary"
+                            @click="addColumn()"
+                            :disabled="isAddingColumnDisabled">
+                            Add Column
+                        </button>
+
+                        <button
+                            type="button"
+                            class="btn btn-secondary"
+                            @click="addRow()">
+                            Add Row
+                        </button>
+
                     </div>
 
                     <div class="card-footer text-right">
@@ -53,46 +71,48 @@
                         last_name: 'Doe',
                         emailAddress: 'john.doe@example.com'
                     },
-                    {
-                        first_name: 'John',
-                        last_name: 'Doe',
-                        emailAddress: 'john.doe@example.com'
-                    },
 
                 ],
                 columns: [
                     {key: 'first_name'},
                     {key: 'last_name'},
                     {key: 'emailAddress'},
-
                 ]
             }
         },
 
         methods: {
-            add_row() {
-                // Add new row to data with column keys
+            addRow() {
+                let newRow = {};
+                this.columns.forEach(item => newRow[item.key] = '');
+
+                this.data.push(newRow);
             },
 
-            remove_row(row_index) {
-                // remove the given row
-            },
+            addColumn() {
+                if (this.isAddingColumnDisabled) {
+                    return;
+                }
 
-            add_column() {
+                let newRowName = `Column(${this.columns.length})`;
+                this.columns.push({
+                    key: newRowName
+                });
 
+                this.data.forEach(item => {item[newRowName] = ''})
             },
 
             updateColumnKey(column, event) {
-                let oldKey = column.key;
+                const oldKey = column.key;
+                const newKey = event.target.value;
 
-                let columnKeyExists = !!this.columns.find(column => column.key === event.target.value);
-
-                column.key = event.target.value;
-
+                const columnKeyExists = this.columns.find(column => column.key === newKey);
                 if (columnKeyExists) {
-                    column.key = event.target.value.substring(0, event.target.value.length - 1);
+                    event.target.value = oldKey;
                     return;
                 }
+
+                column.key = newKey;
 
                 this.data.forEach(
                     (row) => {
@@ -104,13 +124,36 @@
                 )
             },
 
+            removeRow(row) {
+                if (window.confirm('Delete this item?')) {
+                    this.data = this.data.filter(item => item !== row);
+                }
+            },
+
             submit() {
-                return axios.patch('/api/csv-export', this.data);
+                return axios.patch('/api/csv-export', {'data': this.data}, {responseType: 'blob'})
+                    .then(response => {
+                        const url = window.URL.createObjectURL(new Blob([response.data]));
+                        const link = document.createElement('a');
+                        link.href = url;
+                        link.setAttribute('download', 'data.csv');
+                        document.body.appendChild(link);
+                        link.click();
+                    })
+                    .catch(function (error) {
+                      if (error.response.status === 422) {
+                        alert('Validation is failed');
+                      } else {
+                        alert('Something went wrong please try again later');
+                      }
+                    });
             }
         },
-
-        watch: {
-        }
+        computed: {
+            isAddingColumnDisabled: function() {
+                return this.columns.length >= 10;
+            },
+        },
     }
 </script>
 
