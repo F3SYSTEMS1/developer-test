@@ -9,6 +9,7 @@ require('./bootstrap');
 import { BootstrapVue, IconsPlugin } from 'bootstrap-vue'
 import 'bootstrap/dist/css/bootstrap.css'
 import 'bootstrap-vue/dist/bootstrap-vue.css'
+import Vuelidate from 'vuelidate'
 
 window.Vue = require('vue');
 
@@ -16,7 +17,8 @@ window.Vue = require('vue');
 Vue.use(BootstrapVue);
 // Optionally install the BootstrapVue icon components plugin
 Vue.use(IconsPlugin);
-
+// Validation
+Vue.use(Vuelidate);
 
 /**
  * The following block of code may be used to automatically register your
