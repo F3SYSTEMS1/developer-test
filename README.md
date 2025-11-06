@@ -20,6 +20,14 @@ This is a small test based around a simple application where a user can interact
 
 ## Setup
 
+### Prerequisites
+
+- PHP 8.2 or higher (`php -v`)
+- Composer
+- Node.js 22 or higher (`node -v`)
+
+If you are using a version manager such as `asdf` or `nvm`, install and activate one of the supported Node.js versions before continuing. For PHP, tools like `brew`, `asdf`, or `phpenv` can help you install the required 8.2 runtime.
+
 Run the following commands to get started:
 
 ```bash
