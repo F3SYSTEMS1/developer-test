@@ -114,9 +114,6 @@ const updateColumnKey = (column: Column, event: Event) => {
     const oldKey = column.key;
 
     const columnKeyExists = !!columns.value.find((item) => item.key === newKey);
-
-    column.key = newKey;
-
     if (columnKeyExists) {
         Swal.fire({
             title: "Duplicate Column Name",
@@ -127,12 +124,13 @@ const updateColumnKey = (column: Column, event: Event) => {
         return;
     }
 
+    column.key = newKey;
+
     data.value.forEach((row) => {
-        if (row[oldKey]) {
-            row[column.key] = row[oldKey];
-            delete row[oldKey];
-        }
+        row[column.key] = row[oldKey];
+        delete row[oldKey];
     });
+
 };
 
 const submit = async () => {
